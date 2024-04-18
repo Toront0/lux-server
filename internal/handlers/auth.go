@@ -163,20 +163,20 @@ func (h *authHandler) HandleLoginAccount(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	dataSession := &http.Cookie{
-		Name: "data-session",
-		Value: dataSToken,
-		Expires: expires,
-		Path: "/",
-		Secure: true,
-		SameSite: http.SameSiteNoneMode,
-	}
+	// dataSession := &http.Cookie{
+	// 	Name: "data-session",
+	// 	Value: dataSToken,
+	// 	Expires: expires,
+	// 	Path: "/",
+	// 	Secure: true,
+	// 	SameSite: http.SameSiteNoneMode,
+	// }
 
 	w.Header().Set("Set-Cookie", "data-session="+dataSToken +"; Path=/;" + expires.String() + "; Secure; SameSite=None; Partitioned;")
 
 	
 
-	http.SetCookie(w, dataSession)
+	// http.SetCookie(w, dataSession)
 
 	json.NewEncoder(w).Encode(acc)
 }
