@@ -150,7 +150,7 @@ func (h *authHandler) HandleLoginAccount(w http.ResponseWriter, r *http.Request)
 	// http.SetCookie(w, cookie)
 
 
-	w.Header().Set("Set-Cookie", "jwt="+token +"; Path=/;" + expires.String() + "; HttpOnly; Secure; SameSite=Static; Partitioned;")
+	w.Header().Set("Set-Cookie", "jwt="+token +"; Path=/;" + expires.String() + "; HttpOnly; Secure; SameSite=Strict; Partitioned;")
 
 
 	data_sess, err  := json.Marshal(acc)
@@ -172,7 +172,7 @@ func (h *authHandler) HandleLoginAccount(w http.ResponseWriter, r *http.Request)
 	// 	SameSite: http.SameSiteNoneMode,
 	// }
 
-	w.Header().Set("Set-Cookie", "data-session="+dataSToken +"; Path=/;" + expires.String() + "; Secure; SameSite=Static; Partitioned;")
+	w.Header().Set("Set-Cookie", "data-session="+dataSToken +"; Path=/;" + expires.String() + "; Secure; SameSite=Strict; Partitioned;")
 
 	
 
