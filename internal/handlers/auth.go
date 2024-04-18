@@ -164,7 +164,6 @@ func (h *authHandler) HandleLoginAccount(w http.ResponseWriter, r *http.Request)
 	dataSession := &http.Cookie{
 		Name: "data-session",
 		Value: dataSToken,
-		HttpOnly: true,
 		Expires: expires,
 		Secure: true,
 		SameSite: http.SameSiteNoneMode,
