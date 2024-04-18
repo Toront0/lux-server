@@ -137,19 +137,20 @@ func (h *authHandler) HandleLoginAccount(w http.ResponseWriter, r *http.Request)
 
 	expires := time.Now().AddDate(1, 0, 0)
 
-	cookie := &http.Cookie{
-		Name: "jwt",
-		Value: token,
-		HttpOnly: true,
-		Expires: expires,
-		Path: "/",
-		Secure: true,
-		SameSite: http.SameSiteNoneMode,
-	}
+	// cookie := &http.Cookie{
+	// 	Name: "jwt",
+	// 	Value: token,
+	// 	HttpOnly: true,
+	// 	Expires: expires,
+	// 	Path: "/",
+	// 	Secure: true,
+	// 	SameSite: http.SameSiteNoneMode,
+	// }
 
-	http.SetCookie(w, cookie)
+	// http.SetCookie(w, cookie)
 
 
+	w.Header().Set("Set-Cookie", "jwt="+token +"; Path=/;" + expires.String() + "; HttpOnly; Secure; SameSite=None; Partitioned")
 
 
 	data_sess, err  := json.Marshal(acc)
@@ -170,6 +171,8 @@ func (h *authHandler) HandleLoginAccount(w http.ResponseWriter, r *http.Request)
 		Secure: true,
 		SameSite: http.SameSiteNoneMode,
 	}
+
+	
 
 	http.SetCookie(w, dataSession)
 
