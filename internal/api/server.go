@@ -8,7 +8,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/cloudinary/cloudinary-go/v2"
-	// "github.com/rs/cors"
+	"github.com/rs/cors"
 
 	"net/http"
 
@@ -39,6 +39,7 @@ func NewServer(listenAddr string) *server {
 func (s *server) Run() {
 
 	router := http.NewServeMux()
+
 
 
 	conn, err := pgxpool.New(context.Background(), "postgresql://social-media_owner:P1TMr6WdiFaQ@ep-crimson-rice-a2yhkx7a.eu-central-1.aws.neon.tech/social-media?sslmode=require")
@@ -152,16 +153,30 @@ func (s *server) Run() {
 
 	// router.HandleFunc("GET /communities", communityHandler.HandleGetCommunities)
 
+
+
+
+	c := cors.New(cors.Options{
+		// AllowedOrigins:   []string{"https://foo.com"}, // Use this to allow specific origin hosts
+		AllowedOrigins:   []string{"https://*", "http://*"},
+		// AllowOriginFunc:  func(r *http.Request, origin string) bool { return true },
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: true,
+		MaxAge:           300, // Maximum value not ignored by any of major browsers
+	})
+
+	mux := c.Handler(router)
+
 	stack := middleware.CreateStack(
-		middleware.AllowCors,
 		middleware.RequireAuth,
 	)
-
 	
 
 	server := http.Server{
 		Addr: s.listenAddr,
-		Handler: stack(router),
+		Handler: stack(mux),
 	}
 
 	server.ListenAndServe()
