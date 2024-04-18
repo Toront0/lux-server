@@ -164,6 +164,7 @@ func (h *authHandler) HandleLoginAccount(w http.ResponseWriter, r *http.Request)
 	dataSession := &http.Cookie{
 		Name: "data-session",
 		Value: dataSToken,
+		HttpOnly: true,
 		Expires: expires,
 		Secure: true,
 		SameSite: http.SameSiteNoneMode,
@@ -172,8 +173,6 @@ func (h *authHandler) HandleLoginAccount(w http.ResponseWriter, r *http.Request)
 	http.SetCookie(w, dataSession)
 
 	json.NewEncoder(w).Encode(acc)
-
-	w.WriteHeader(200)
 }
 
 func (h *authHandler) HandleAuthenticate(w http.ResponseWriter, r *http.Request) {
