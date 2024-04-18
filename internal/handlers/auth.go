@@ -142,7 +142,6 @@ func (h *authHandler) HandleLoginAccount(w http.ResponseWriter, r *http.Request)
 		Value: token,
 		HttpOnly: true,
 		Expires: expires,
-		Secure: true,
 	}
 
 	http.SetCookie(w, cookie)
@@ -164,7 +163,7 @@ func (h *authHandler) HandleLoginAccount(w http.ResponseWriter, r *http.Request)
 		Name: "data-session",
 		Value: dataSToken,
 		Expires: expires,
-		Secure: true,
+
 
 	}
 
