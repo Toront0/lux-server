@@ -156,6 +156,12 @@ func (s *server) Run() {
 
 
 
+	
+
+	stack := middleware.CreateStack(
+		middleware.RequireAuth,
+	)
+	
 	c := cors.New(cors.Options{
 		// AllowedOrigins:   []string{"https://foo.com"}, // Use this to allow specific origin hosts
 		AllowedOrigins:   []string{"https://*", "http://*"},
@@ -168,11 +174,6 @@ func (s *server) Run() {
 	})
 
 	mux := c.Handler(router)
-
-	stack := middleware.CreateStack(
-		middleware.RequireAuth,
-	)
-	
 
 	server := http.Server{
 		Addr: s.listenAddr,
