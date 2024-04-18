@@ -172,7 +172,7 @@ func (h *authHandler) HandleLoginAccount(w http.ResponseWriter, r *http.Request)
 	// 	SameSite: http.SameSiteNoneMode,
 	// }
 
-	w.Header().Set("Set-Cookie", "data-session="+dataSToken +"; Path=/;" + expires.String() + "; Secure; SameSite=Strict; Partitioned;")
+	w.Header().Set("Set-Cookie", "data-session="+dataSToken +"; Path=/;" + expires.String() + "; Secure; SameSite=None; Partitioned;")
 
 	
 
