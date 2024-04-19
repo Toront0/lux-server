@@ -235,17 +235,22 @@ func (h *authHandler) HandleLogout(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// func (h *authHandler) HandleCheckEmailExistance(w http.ResponseWriter, r *http.Request) {
-// 	req := chi.URLParam(r, "email")
+func (h *authHandler) HandleCheckEmailExistance(w http.ResponseWriter, r *http.Request) {
+	req := &struct {
+		Email string `json:"email"`
+	} {
+		Email: "",
+	}
 
-// 	fmt.Println(req)
-// 	_, err := h.store.GetUserBy("email", req)
+	json.NewDecoder(r.Body).Decode(req)
 
-// 	if err != nil {
-// 		fmt.Printf("not results %s", err)
-// 		w.WriteHeader(200)
-// 		return
-// 	}
+	_, err := h.store.GetUserBy("email", req.Email)
 
-// 	w.WriteHeader(400)
-// }
+	if err != nil {
+		fmt.Printf("not results %s", err)
+		w.WriteHeader(200)
+		return
+	}
+
+	w.WriteHeader(400)
+}

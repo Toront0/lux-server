@@ -64,6 +64,7 @@ func (s *server) Run() {
 	router.HandleFunc("POST /login", authHandler.HandleLoginAccount)
 	router.HandleFunc("GET /auth", authHandler.HandleAuthenticate)
 	router.HandleFunc("GET /logout", authHandler.HandleLogout)
+	router.HandleFunc("POST /check-email", authHandler.HandleCheckEmailExistance)
 
 	postStore := services.NewPostStore(conn)
 	postHandler := handlers.NewPostHandler(postStore, cld)
@@ -112,7 +113,7 @@ func (s *server) Run() {
 	router.HandleFunc("POST /messages", userHandler.HandleGetDialogMessages)
 	router.HandleFunc("GET /dialogs", userHandler.HandleGetUserDialogs)
 
-	router.HandleFunc("GET /ws-listener/{id}", userHandler.ServeWs)
+	router.HandleFunc("GET /ws-listener", userHandler.ServeWs)
 
 	musicStore := services.NewMusicStore(conn)
 	musicHandler := handlers.NewMusicHandler(musicStore, cld)
@@ -153,15 +154,11 @@ func (s *server) Run() {
 
 	// router.HandleFunc("GET /communities", communityHandler.HandleGetCommunities)
 
-
-
-
 	
 
 	stack := middleware.CreateStack(
 		middleware.RequireAuth,
 	)
-	
 	c := cors.New(cors.Options{
 		// AllowedOrigins:   []string{"https://foo.com"}, // Use this to allow specific origin hosts
 		AllowedOrigins:   []string{"https://*", "http://*"},
@@ -174,6 +171,7 @@ func (s *server) Run() {
 	})
 
 	mux := c.Handler(router)
+	
 
 	server := http.Server{
 		Addr: s.listenAddr,

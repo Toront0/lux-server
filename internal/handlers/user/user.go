@@ -645,17 +645,10 @@ func (h *userHandler) HandleUpdateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *userHandler) ServeWs(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("id")
+	userID := middleware.UserFromContext(r.Context())
 
-	uID, err := strconv.Atoi(id)
 
-	if err != nil {
-		fmt.Printf("could not parse id to get user dialogs %s", err)
-		w.WriteHeader(400)
-		return
-	}
-
-	fmt.Printf("user with %d connected", uID)
+	fmt.Printf("user with %d connected", userID)
 
 	conn, err := Upgrader.Upgrade(w, r, nil)
 	
@@ -664,7 +657,7 @@ func (h *userHandler) ServeWs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client := &Client{hub: h.hub, conn: conn, send: make(chan []byte, 256), userID: uID}
+	client := &Client{hub: h.hub, conn: conn, send: make(chan []byte, 256), userID: userID}
 	h.hub.register <- client
 
 

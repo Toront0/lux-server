@@ -23,7 +23,7 @@ func UserFromContext(ctx context.Context) int {
 	return int(val)
 }
 
-var excludeAuthPaths = []string{"/auth", "/login", "/sign-up", "/users/7/music-playlists"}
+var excludeAuthPaths = []string{"/auth", "/login", "/sign-up", "/check-email"}
 
 func RequireAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
