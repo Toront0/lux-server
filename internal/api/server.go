@@ -9,7 +9,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/cloudinary/cloudinary-go/v2"
 	"github.com/rs/cors"
-
+	"github.com/go-chi/chi/v5"
 	"net/http"
 
 	"time"
@@ -38,7 +38,21 @@ func NewServer(listenAddr string) *server {
 
 func (s *server) Run() {
 
-	router := http.NewServeMux()
+	mux := chi.NewRouter()
+
+	c := cors.New(cors.Options{
+		// AllowedOrigins:   []string{"https://foo.com"}, // Use this to allow specific origin hosts
+		AllowedOrigins:   []string{"https://*", "http://*"},
+		// AllowOriginFunc:  func(r *http.Request, origin string) bool { return true },
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: true,
+		MaxAge:           300, // Maximum value not ignored by any of major browsers
+	})
+
+	mux.Use(c.Handler)
+	mux.Use(middleware.RequireAuth)
 
 
 
@@ -60,125 +74,119 @@ func (s *server) Run() {
 	authStore := services.NewAuthStore(conn)
 	authHandler := handlers.NewAuthHandler(authStore)
 
-	router.HandleFunc("POST /sign-up", authHandler.HandleCreateAccount)
-	router.HandleFunc("POST /login", authHandler.HandleLoginAccount)
-	router.HandleFunc("GET /auth", authHandler.HandleAuthenticate)
-	router.HandleFunc("GET /logout", authHandler.HandleLogout)
-	router.HandleFunc("POST /check-email", authHandler.HandleCheckEmailExistance)
+	mux.Post("/sign-up", authHandler.HandleCreateAccount)
+	mux.Post("/login", authHandler.HandleLoginAccount)
+	mux.Get("/auth", authHandler.HandleAuthenticate)
+	mux.Get("/logout", authHandler.HandleLogout)
+	mux.Post("/check-email", authHandler.HandleCheckEmailExistance)
 
 	postStore := services.NewPostStore(conn)
 	postHandler := handlers.NewPostHandler(postStore, cld)
 
-	router.HandleFunc("GET /posts", postHandler.HandleGetPosts)
-	router.HandleFunc("POST /create-post", postHandler.HandleCreatePost)
+	mux.Get("/posts", postHandler.HandleGetPosts)
+	mux.Post("/create-post", postHandler.HandleCreatePost)
 
-	router.HandleFunc("GET /posts/{id}", postHandler.HandleGetPost)
-	router.HandleFunc("GET /post-comments/{id}", postHandler.HandleGetComments)
-	router.HandleFunc("POST /post-comment", postHandler.HandleInsertComment)
+	mux.Get("/posts/{id}", postHandler.HandleGetPost)
+	mux.Get("/post-comments/{id}", postHandler.HandleGetComments)
+	mux.Post("/post-comment", postHandler.HandleInsertComment)
 
-	router.HandleFunc("GET /post-comment-replies/{id}", postHandler.HandleGetCommentReplies)
-	router.HandleFunc("POST /post-comment-reply", postHandler.HandleInsertCommentReply)
+	mux.Get("/post-comment-replies/{id}", postHandler.HandleGetCommentReplies)
+	mux.Post("/post-comment-reply", postHandler.HandleInsertCommentReply)
 
-	router.HandleFunc("POST /like-post", postHandler.HandleLikePost)
-	router.HandleFunc("POST /delete-like-post", postHandler.HandleDeleteLike)
+	mux.Post("/like-post", postHandler.HandleLikePost)
+	mux.Post("/delete-like-post", postHandler.HandleDeleteLike)
 
-	router.HandleFunc("POST /lpc", postHandler.HandleLikeComment)
-	router.HandleFunc("POST /delete-lpc", postHandler.HandleDeleteLikeComment)
+	mux.Post("/lpc", postHandler.HandleLikeComment)
+	mux.Post("/delete-lpc", postHandler.HandleDeleteLikeComment)
 
-	router.HandleFunc("POST /lpcr", postHandler.HandleLikeCommentReply)
-	router.HandleFunc("POST /delete-lpcr", postHandler.HandleDeleteCommentLikeReply)
+	mux.Post("/lpcr", postHandler.HandleLikeCommentReply)
+	mux.Post("/delete-lpcr", postHandler.HandleDeleteCommentLikeReply)
 
 	userStore := services.NewUserStore(conn)
 	userHandler := user.NewUserHandler(userStore, cld)
 
-	router.HandleFunc("GET /users/{id}", userHandler.HandleGetUserDetail)
-	router.HandleFunc("GET /users/{id}/posts", userHandler.HandleGetUserPosts)
-	router.HandleFunc("GET /users/{id}/videos", userHandler.HandleGetUserVideos)
-	router.HandleFunc("GET /users/{id}/friends", userHandler.HandleGetUserFriends)
-	router.HandleFunc("GET /users/{id}/music", userHandler.HandleGetUserMusic)
-	router.HandleFunc("GET /users/{id}/music-playlists", userHandler.HandleGetUserMusicPlaylists)
+	mux.Get("/users/{id}", userHandler.HandleGetUserDetail)
+	mux.Get("/users/{id}/posts", userHandler.HandleGetUserPosts)
+	mux.Get("/users/{id}/videos", userHandler.HandleGetUserVideos)
+	mux.Get("/users/{id}/friends", userHandler.HandleGetUserFriends)
+	mux.Get("/users/{id}/music", userHandler.HandleGetUserMusic)
+	mux.Get("/users/{id}/music-playlists", userHandler.HandleGetUserMusicPlaylists)
 
-	router.HandleFunc("POST /users/{id}/follow", userHandler.HandleAddFollower)
-	router.HandleFunc("POST /users/{id}/delete-follow", userHandler.HandleDeleteFollow)
-	router.HandleFunc("POST /users/{id}/friend", userHandler.HandleAddFriend)
-	router.HandleFunc("POST /users/{id}/delete-friend", userHandler.HandleDeleteFriendship)
+	mux.Post("/users/{id}/follow", userHandler.HandleAddFollower)
+	mux.Post("/users/{id}/delete-follow", userHandler.HandleDeleteFollow)
+	mux.Post("/users/{id}/friend", userHandler.HandleAddFriend)
+	mux.Post("/users/{id}/delete-friend", userHandler.HandleDeleteFriendship)
 
-	router.HandleFunc("GET /users/{id}/followers", userHandler.HandleGetUserFollowers)
-	router.HandleFunc("GET /users/{id}/followings", userHandler.HandleGetUserFollowings)
+	mux.Get("/users/{id}/followers", userHandler.HandleGetUserFollowers)
+	mux.Get("/users/{id}/followings", userHandler.HandleGetUserFollowings)
 
-	router.HandleFunc("POST /users/update", userHandler.HandleUpdateUser)
-	router.HandleFunc("GET /settings", userHandler.HandleGetSettingsData)
+	mux.Post("/users/update", userHandler.HandleUpdateUser)
+	mux.Get("/settings", userHandler.HandleGetSettingsData)
 	
-	router.HandleFunc("POST /message", userHandler.HandleSendMessage)
-	router.HandleFunc("POST /messages", userHandler.HandleGetDialogMessages)
-	router.HandleFunc("GET /dialogs", userHandler.HandleGetUserDialogs)
+	mux.Post("/message", userHandler.HandleSendMessage)
+	mux.Post("/messages", userHandler.HandleGetDialogMessages)
+	mux.Get("/dialogs", userHandler.HandleGetUserDialogs)
 
-	router.HandleFunc("GET /ws-listener", userHandler.ServeWs)
+	mux.Get("/ws-listener", userHandler.ServeWs)
 
 	musicStore := services.NewMusicStore(conn)
 	musicHandler := handlers.NewMusicHandler(musicStore, cld)
 
-	router.HandleFunc("GET /music", musicHandler.HandleGetSongs)
-	router.HandleFunc("GET /playlists", musicHandler.HandleGetPlaylists)
-	router.HandleFunc("GET /playlists/{id}", musicHandler.HandleGetPlaylistDetail)
-	router.HandleFunc("POST /create-playlist", musicHandler.HandleCreatePlaylist)
-	router.HandleFunc("POST /delete-playlist/{id}", musicHandler.HandleDeletePlaylist)
+	mux.Get("/music", musicHandler.HandleGetSongs)
+	mux.Get("/playlists", musicHandler.HandleGetPlaylists)
+	mux.Get("/playlists/{id}", musicHandler.HandleGetPlaylistDetail)
+	mux.Post("/create-playlist", musicHandler.HandleCreatePlaylist)
+	mux.Post("/delete-playlist/{id}", musicHandler.HandleDeletePlaylist)
 
-	router.HandleFunc("GET /{userId}/music/playlists/{playlistId}", musicHandler.HandleGetPlaylistSongs)
-	router.HandleFunc("GET /{userId}/available-songs/playlists/{playlistId}", musicHandler.HandleGetAvailableAndPlaylistSongs)
+	mux.Get("/{userId}/music/playlists/{playlistId}", musicHandler.HandleGetPlaylistSongs)
+	mux.Get("/{userId}/available-songs/playlists/{playlistId}", musicHandler.HandleGetAvailableAndPlaylistSongs)
 	
-	router.HandleFunc("POST /add-song/{id}", musicHandler.HandleAddSongToUser)
-	router.HandleFunc("POST /delete-song/{id}", musicHandler.HandleDeleteUserSong)
+	mux.Post("/add-song/{id}", musicHandler.HandleAddSongToUser)
+	mux.Post("/delete-song/{id}", musicHandler.HandleDeleteUserSong)
 	
 
 	videoStore := services.NewVideoStore(conn)
 	videoHandler := handlers.NewVideoHandler(videoStore)
 
-	router.HandleFunc("GET /videos", videoHandler.HandleGetVideos)
-	router.HandleFunc("GET /videos/{id}", videoHandler.HandleGetVideo)
-	router.HandleFunc("POST /like-video", videoHandler.HandleLikeVideo)
-	router.HandleFunc("POST /delete-like-video", videoHandler.HandleDeleteLike)
+	mux.Get("/videos", videoHandler.HandleGetVideos)
+	mux.Get("/videos/{id}", videoHandler.HandleGetVideo)
+	mux.Post("/like-video", videoHandler.HandleLikeVideo)
+	mux.Post("/delete-like-video", videoHandler.HandleDeleteLike)
 
-	router.HandleFunc("GET /video-comments/{id}", videoHandler.HandleGetComments)
-	router.HandleFunc("POST /video-comment", videoHandler.HandleInsertComment)
-	router.HandleFunc("POST /lvc", videoHandler.HandleLikeComment)
-	router.HandleFunc("POST /delete-lvc", videoHandler.HandleDeleteLikeComment)
+	mux.Get("/video-comments/{id}", videoHandler.HandleGetComments)
+	mux.Post("/video-comment", videoHandler.HandleInsertComment)
+	mux.Post("/lvc", videoHandler.HandleLikeComment)
+	mux.Post("/delete-lvc", videoHandler.HandleDeleteLikeComment)
 
-	router.HandleFunc("GET /video-comment-replies/{id}", videoHandler.HandleGetCommentReplies)
-	router.HandleFunc("POST /video-comment-reply", videoHandler.HandleInsertCommentReply)
-	router.HandleFunc("POST /lvcr", videoHandler.HandleLikeCommentReply)
-	router.HandleFunc("POST /delete-lvcr", videoHandler.HandleDeleteCommentLikeReply)
+	mux.Get("/video-comment-replies/{id}", videoHandler.HandleGetCommentReplies)
+	mux.Post("/video-comment-reply", videoHandler.HandleInsertCommentReply)
+	mux.Post("/lvcr", videoHandler.HandleLikeCommentReply)
+	mux.Post("/delete-lvcr", videoHandler.HandleDeleteCommentLikeReply)
 
 	// communityStore := services.NewCommunityStore(conn)
 	// communityHandler := handlers.NewCommunityHandler(communityStore)
 
-	// router.HandleFunc("GET /communities", communityHandler.HandleGetCommunities)
+	// router.GET("/communities", communityHandler.HandleGetCommunities)
 
+	// c := cors.New(cors.Options{
+	// 	// AllowedOrigins:   []string{"https://foo.com"}, // Use this to allow specific origin hosts
+	// 	AllowedOrigins:   []string{"https://lux-client.vercel.app", "http://localhost:5173"},
+	// 	// AllowOriginFunc:  func(r *http.Request, origin string) bool { return true },
+	// 	AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
+	// 	AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+	// 	ExposedHeaders:   []string{"Link"},
+	// 	AllowCredentials: true,
+	// 	MaxAge:           300, // Maximum value not ignored by any of major browsers
+	// })
+
+	// mux := c.Handler(router)
+
+	// stack := middleware.CreateStack(
+	// 	middleware.RequireAuth,
+	// )
 	
 
-	stack := middleware.CreateStack(
-		middleware.RequireAuth,
-	)
-	c := cors.New(cors.Options{
-		// AllowedOrigins:   []string{"https://foo.com"}, // Use this to allow specific origin hosts
-		AllowedOrigins:   []string{"https://*", "http://*"},
-		// AllowOriginFunc:  func(r *http.Request, origin string) bool { return true },
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
-		ExposedHeaders:   []string{"Link"},
-		AllowCredentials: true,
-		MaxAge:           300, // Maximum value not ignored by any of major browsers
-	})
-
-	mux := c.Handler(router)
-	
-
-	server := http.Server{
-		Addr: s.listenAddr,
-		Handler: stack(mux),
-	}
-
-	server.ListenAndServe()
+	http.ListenAndServe(s.listenAddr, mux)
 
 
 }
