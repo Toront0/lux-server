@@ -138,20 +138,22 @@ func (h *authHandler) HandleLoginAccount(w http.ResponseWriter, r *http.Request)
 	expires := time.Now().AddDate(1, 0, 0)
 
 
-	cookie := &http.Cookie{
-		Name: "jwt",
-		Value: token,
-		HttpOnly: true,
-		Expires: expires,
-		Path: "/",
-		Secure: true,
-		SameSite: http.SameSiteNoneMode,
-	}
+	// cookie := &http.Cookie{
+	// 	Name: "jwt",
+	// 	Value: token,
+	// 	HttpOnly: true,
+	// 	Expires: expires,
+	// 	Path: "/",
+	// 	Secure: true,
+	// 	SameSite: http.SameSiteNoneMode,
+	// }
 
-	http.SetCookie(w, cookie)
+	// http.SetCookie(w, cookie)
 
 
-	
+	w.Header().Add("Set-Cookie", "data-session="+dataSToken +";path=/;" + "expires=" +expires.String() + ";secure; sameSite=None; partitioned;")
+
+	w.Header().Add("Set-Cookie", "jwt="+token +";path=/;" + "expires=" +expires.String() + ";secure;sameSite=None;partitioned;")
 
 
 	data_sess, err  := json.Marshal(acc)
@@ -164,18 +166,9 @@ func (h *authHandler) HandleLoginAccount(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	dataSession := &http.Cookie{
-		Name: "data-session",
-		Value: dataSToken,
-		Expires: expires,
-		Path: "/",
-		// SameSite: http.SameSiteNoneMode,
-	}
-	http.SetCookie(w, dataSession)
+	
 
-	// w.Header().Add("Set-Cookie", "data-session="+dataSToken +";path=/;" + "expires=" +expires.String() + ";secure; sameSite=None; partitioned;")
-
-	// w.Header().Add("Set-Cookie", "jwt="+token +";path=/;" + "expires=" +expires.String() + ";secure;sameSite=None;partitioned;")
+	
 	
 
 
