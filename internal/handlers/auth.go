@@ -151,7 +151,7 @@ func (h *authHandler) HandleLoginAccount(w http.ResponseWriter, r *http.Request)
 	// http.SetCookie(w, cookie)
 
 
-	w.Header().Add("Set-Cookie", "data-session="+dataSToken +";path=/;" + "expires=" +expires.String() + ";secure; sameSite=None; partitioned;")
+	
 
 	w.Header().Add("Set-Cookie", "jwt="+token +";path=/;" + "expires=" +expires.String() + ";secure;sameSite=None;partitioned;")
 
@@ -166,7 +166,7 @@ func (h *authHandler) HandleLoginAccount(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	
+	w.Header().Add("Set-Cookie", "data-session="+dataSToken +";path=/;" + "expires=" +expires.String() + ";secure; sameSite=None; partitioned;")
 
 	
 	
