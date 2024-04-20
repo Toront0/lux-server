@@ -169,7 +169,7 @@ func (h *authHandler) HandleLoginAccount(w http.ResponseWriter, r *http.Request)
 		Value: dataSToken,
 		Expires: expires,
 		Path: "/",
-		SameSite: http.SameSiteNoneMode,
+		// SameSite: http.SameSiteNoneMode,
 	}
 	http.SetCookie(w, dataSession)
 
