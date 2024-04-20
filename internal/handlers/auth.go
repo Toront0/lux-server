@@ -144,6 +144,7 @@ func (h *authHandler) HandleLoginAccount(w http.ResponseWriter, r *http.Request)
 		HttpOnly: true,
 		Expires: expires,
 		Path: "/",
+		Secure: true,
 		SameSite: http.SameSiteNoneMode,
 	}
 
@@ -168,7 +169,6 @@ func (h *authHandler) HandleLoginAccount(w http.ResponseWriter, r *http.Request)
 		Value: dataSToken,
 		Expires: expires,
 		Path: "/",
-		Secure: true,
 		SameSite: http.SameSiteNoneMode,
 	}
 	http.SetCookie(w, dataSession)
